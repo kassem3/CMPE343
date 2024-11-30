@@ -1,0 +1,500 @@
+\documentclass[14pt,a4paper]{extarticle}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{booktabs}
+
+\geometry{a4paper, margin=1in}
+\setlength{\parskip}{1em}
+\setlength{\parindent}{0em}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  stringstyle=\color{red},
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny,
+  numbersep=5pt,
+  showstringspaces=false
+}
+
+\title{Flight Booking Management System\\\large CMPE343 DBMS--I Term Project}
+\author{Kassem}
+\date{December 1\textsuperscript{st}, 2024}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\newpage
+
+\section{Introduction}
+
+The \textbf{Flight Booking Management System} is designed to manage flight schedules, passenger bookings, and payment details. It allows airlines to handle seat availability, pricing, and customer reservations efficiently.
+
+\textbf{Assumptions:}
+\begin{itemize}
+    \item Each flight has a unique flight number.
+    \item Flights operate on specific dates and times.
+    \item Passengers can book multiple flights, and each booking has a unique reference number.
+    \item Payments are associated with bookings and can have various statuses (e.g., Pending, Completed).
+\end{itemize}
+
+\section{Database Design}
+
+\subsection{ER Diagram}
+The following entities and relationships were identified:
+\begin{itemize}
+    \item \textbf{Entities:} Airlines, Flights, Passengers, Bookings, Payments, Schedules.
+    \item \textbf{Relationships:}
+        \begin{enumerate}
+            \item One airline operates multiple flights.
+            \item One passenger can make multiple bookings.
+            \item Each booking is linked to one schedule and one payment.
+        \end{enumerate}
+\end{itemize}
+
+\newpage
+
+\textbf{ER Diagram:}
+\begin{center}
+\includegraphics[width=0.8\textwidth]{er_diagram_image}%later
+\end{center}
+
+\subsection{Relational Model and DDL Statements}
+The relational model is implemented with the following DDL statements:
+
+\textbf{1. Airlines Table:}
+\begin{lstlisting}[language=SQL]
+CREATE TABLE Airlines(
+    AirlineID INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(100) NOT NULL,
+    Country VARCHAR(50) NOT NULL);
+\end{lstlisting}
+
+\textbf{2. Flights Table:}
+\begin{lstlisting}[language=SQL]
+CREATE TABLE Flights(
+    FlightID INT PRIMARY KEY AUTO_INCREMENT,
+    AirlineID INT NOT NULL,
+    DepartureCity VARCHAR(50) NOT NULL,
+    ArrivalCity VARCHAR(50) NOT NULL,
+    Duration TIME NOT NULL,
+    FOREIGN KEY (AirlineID) REFERENCES Airlines(AirlineID));
+\end{lstlisting}
+
+\textbf{3. Schedules Table:}
+\begin{lstlisting}[language=SQL]
+CREATE TABLE Schedules(
+    ScheduleID INT PRIMARY KEY AUTO_INCREMENT,
+    FlightID INT NOT NULL,
+    DepartureDate DATE NOT NULL,
+    DepartureTime TIME NOT NULL,
+    ArrivalTime TIME NOT NULL,
+    AvailableSeats INT NOT NULL,
+    FOREIGN KEY (FlightID) REFERENCES Flights(FlightID));
+\end{lstlisting}
+
+\textbf{4. Passengers Table:}
+\begin{lstlisting}[language=SQL]
+CREATE TABLE Passengers(
+    PassengerID INT PRIMARY KEY AUTO_INCREMENT,
+    FullName VARCHAR(100) NOT NULL,
+    PassportNumber VARCHAR(20) UNIQUE NOT NULL,
+    ContactNumber VARCHAR(15));
+\end{lstlisting}
+
+\textbf{5. Bookings Table:}
+\begin{lstlisting}[language=SQL]
+CREATE TABLE Bookings(
+    BookingID INT PRIMARY KEY AUTO_INCREMENT,
+    PassengerID INT NOT NULL,
+    ScheduleID INT NOT NULL,
+    BookingDate DATE NOT NULL,
+    Status VARCHAR(20) DEFAULT 'Pending',
+    FOREIGN KEY (PassengerID) REFERENCES Passengers(PassengerID),
+    FOREIGN KEY (ScheduleID) REFERENCES Schedules(ScheduleID));
+\end{lstlisting}
+
+\textbf{6. Payments Table:}
+\begin{lstlisting}[language=SQL]
+CREATE TABLE Payments(
+    PaymentID INT PRIMARY KEY AUTO_INCREMENT,
+    BookingID INT NOT NULL,
+    Amount DECIMAL(10, 2) NOT NULL,
+    PaymentDate DATE,
+    PaymentStatus VARCHAR(20) DEFAULT 'Pending',
+    FOREIGN KEY (BookingID) REFERENCES Bookings(BookingID));
+\end{lstlisting}
+
+\section{Populating Data}
+The following DML statements were used to populate the database:
+
+\textbf{1. Airlines Values:}
+\begin{lstlisting}[language=SQL]
+INSERT INTO Airlines (Name, Country) VALUES
+('Airways International', 'USA'),
+('Skyline Travels', 'UK'),
+('EuroFly', 'Germany'),
+('Oceanic Airlines', 'Australia'),
+('AsiaWings', 'India');
+\end{lstlisting}
+
+\textbf{2. Flights Values:}
+\begin{lstlisting}[language=SQL]
+INSERT INTO Flights (AirlineID, DepartureCity, ArrivalCity, Duration) VALUES
+(1, 'New York', 'London', '07:30:00'),
+(2, 'London', 'Paris', '01:15:00'),
+(3, 'Berlin', 'Rome', '02:10:00'),
+(4, 'Sydney', 'Melbourne', '01:30:00'),
+(5, 'Mumbai', 'Dubai', '03:45:00'),
+(1, 'Chicago', 'Tokyo', '13:15:00'),
+(3, 'Frankfurt', 'Madrid', '02:45:00'),
+(5, 'Delhi', 'Bangkok', '04:00:00');
+\end{lstlisting}
+
+\textbf{3. Schedules Values:}
+\begin{lstlisting}[language=SQL]
+INSERT INTO Schedules (FlightID, DepartureDate, DepartureTime, ArrivalTime, AvailableSeats) VALUES
+(1, '2024-12-01', '08:00:00', '15:30:00', 150),
+(2, '2024-12-02', '10:00:00', '11:15:00', 200),
+(3, '2024-12-03', '14:00:00', '16:10:00', 180),
+(4, '2024-12-04', '09:00:00', '10:30:00', 220),
+(5, '2024-12-05', '06:00:00', '09:45:00', 200),
+(6, '2024-12-06', '22:00:00', '11:15:00', 250),
+(7, '2024-12-07', '13:00:00', '15:45:00', 170),
+(8, '2024-12-08', '20:00:00', '00:00:00', 150);
+\end{lstlisting}
+
+\textbf{4. Passengers Values:}
+\begin{lstlisting}[language=SQL]
+INSERT INTO Passengers (FullName, PassportNumber, ContactNumber) VALUES
+('John Doe', 'A12345678', '1234567890'),
+('Jane Smith', 'B98765432', '0987654321'),
+('Alice Johnson', 'C12378945', '1122334455'),
+('Bob Brown', 'D98732145', '9988776655'),
+('Charlie White', 'E11223344', '7788990011'),
+('Diana Prince', 'F55667788', '6677889900'),
+('Ethan Hunt', 'G22334455', '5566778899'),
+('Fiona Clarke', 'H33445566', '4455667788'),
+('George Martin', 'I99887766', '3344556677'),
+('Hannah Lee', 'J77665544', '2233445566');
+\end{lstlisting}
+
+\textbf{5. Bookings Values:}
+\begin{lstlisting}[language=SQL]
+INSERT INTO Bookings (PassengerID, ScheduleID, BookingDate, Status) VALUES
+(1, 1, '2024-11-25', 'Confirmed'),
+(2, 2, '2024-11-25', 'Pending'),
+(3, 3, '2024-11-26', 'Confirmed'),
+(4, 4, '2024-11-27', 'Confirmed'),
+(5, 5, '2024-11-28', 'Pending'),
+(6, 6, '2024-11-29', 'Confirmed'),
+(7, 7, '2024-11-30', 'Confirmed'),
+(8, 8, '2024-12-01', 'Pending'),
+(9, 1, '2024-11-24', 'Confirmed'),
+(10, 3, '2024-11-25', 'Pending');
+\end{lstlisting}
+
+\textbf{6. Payments Values:}
+\begin{lstlisting}[language=SQL]
+INSERT INTO Payments (BookingID, Amount, PaymentDate, PaymentStatus) VALUES
+(1, 700.50, '2024-11-26', 'Completed'),
+(2, 150.00, NULL, 'Pending'),
+(3, 300.75, '2024-11-26', 'Completed'),
+(4, 120.00, '2024-11-27', 'Completed'),
+(5, 450.25, NULL, 'Pending'),
+(6, 850.00, '2024-11-29', 'Completed'),
+(7, 620.50, '2024-11-30', 'Completed'),
+(8, 500.00, NULL, 'Pending'),
+(9, 700.00, '2024-11-25', 'Completed'),
+(10, 320.75, NULL, 'Pending');
+\end{lstlisting}
+
+\section{Display Tables}
+
+\textbf{1. Display Airlines:}
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|l|}
+    \hline
+    \textbf{AirlineID} & \textbf{Name} & \textbf{Country} \\ \hline
+    1 & Airways International & USA \\ \hline
+    2 & Skyline Travels        & UK  \\ \hline
+    3 & EuroFly                & Germany \\ \hline
+    4 & Oceanic Airlines       & Australia \\ \hline
+    5 & AsiaWings              & India \\ \hline
+\end{tabular}
+\end{table}
+
+\textbf{2. Display Flights:}
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|l|l|l|}
+    \hline
+    \textbf{FlightID} & \textbf{AirlineID} & \textbf{DepartureCity} & \textbf{ArrivalCity} & \textbf{Duration} \\ \hline
+    1 & 1 & New York    & London     & 07:30:00 \\ \hline
+    2 & 2 & London      & Paris      & 01:15:00 \\ \hline
+    3 & 3 & Berlin      & Rome       & 02:10:00 \\ \hline
+    4 & 4 & Sydney      & Melbourne  & 01:30:00 \\ \hline
+    5 & 5 & Mumbai      & Dubai      & 03:45:00 \\ \hline
+    6 & 1 & Chicago     & Tokyo      & 13:15:00 \\ \hline
+    7 & 3 & Frankfurt   & Madrid     & 02:45:00 \\ \hline
+    8 & 5 & Delhi       & Bangkok    & 04:00:00 \\ \hline
+\end{tabular}
+\end{table}
+
+\textbf{3. Display Schedules:}
+\begin{table}[h!]
+\centering
+\hspace*{-1.4cm}  %Shift the table left
+\small  %Use smaller font size for this table only
+\begin{tabular}{|l|l|l|l|l|l|}
+    \hline
+    \textbf{ScheduleID} & \textbf{FlightID} & \textbf{DepartureDate} & \textbf{DepartureTime} & \textbf{ArrivalTime} & \textbf{AvailableSeats} \\ \hline
+    1  & 1 & 2024-12-01 & 08:00:00 & 15:30:00 & 150 \\ \hline
+    2  & 2 & 2024-12-02 & 10:00:00 & 11:15:00 & 200 \\ \hline
+    3  & 3 & 2024-12-03 & 14:00:00 & 16:10:00 & 180 \\ \hline
+    4  & 4 & 2024-12-04 & 09:00:00 & 10:30:00 & 220 \\ \hline
+    5  & 5 & 2024-12-05 & 06:00:00 & 09:45:00 & 200 \\ \hline
+    6  & 6 & 2024-12-06 & 22:00:00 & 11:15:00 & 250 \\ \hline
+    7  & 7 & 2024-12-07 & 13:00:00 & 15:45:00 & 170 \\ \hline
+    8  & 8 & 2024-12-08 & 20:00:00 & 00:00:00 & 150 \\ \hline
+\end{tabular}
+\end{table}
+
+\textbf{4. Display Passengers:}
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|l|l|}
+    \hline
+    \textbf{PassengerID} & \textbf{FullName}      & \textbf{PassportNumber} & \textbf{ContactNumber} \\ \hline
+    1  & John Doe       & A12345678 & 1234567890 \\ \hline
+    2  & Jane Smith     & B98765432 & 0987654321 \\ \hline
+    3  & Alice Johnson  & C12378945 & 1122334455 \\ \hline
+    4  & Bob Brown      & D98732145 & 9988776655 \\ \hline
+    5  & Charlie White  & E11223344 & 7788990011 \\ \hline
+    6  & Diana Prince   & F55667788 & 6677889900 \\ \hline
+    7  & Ethan Hunt     & G22334455 & 5566778899 \\ \hline
+    8  & Fiona Clarke   & H33445566 & 4455667788 \\ \hline
+    9  & George Martin  & I99887766 & 3344556677 \\ \hline
+    10 & Hannah Lee     & J77665544 & 2233445566 \\ \hline
+\end{tabular}
+\end{table}
+
+\textbf{5. Display Bookings:}
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|l|l|l|}
+    \hline
+    \textbf{BookingID} & \textbf{PassengerID} & \textbf{ScheduleID} & \textbf{BookingDate} & \textbf{Status} \\ \hline
+    1  & 1  & 1  & 2024-11-25 & Confirmed \\ \hline
+    2  & 2  & 2  & 2024-11-25 & Pending   \\ \hline
+    3  & 3  & 3  & 2024-11-26 & Confirmed \\ \hline
+    4  & 4  & 4  & 2024-11-27 & Confirmed \\ \hline
+    5  & 5  & 5  & 2024-11-28 & Pending   \\ \hline
+    6  & 6  & 6  & 2024-11-29 & Confirmed \\ \hline
+    7  & 7  & 7  & 2024-11-30 & Confirmed \\ \hline
+    8  & 8  & 8  & 2024-12-01 & Pending   \\ \hline
+    9  & 9  & 1  & 2024-11-24 & Confirmed \\ \hline
+    10 & 10 & 3  & 2024-11-25 & Pending   \\ \hline
+\end{tabular}
+\end{table}
+
+\textbf{6. Display Payments:}
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|l|l|l|}
+    \hline
+    \textbf{PaymentID} & \textbf{BookingID} & \textbf{Amount} & \textbf{PaymentDate} & \textbf{PaymentStatus} \\ \hline
+    1  & 1  & 700.50 & 2024-11-26 & Completed \\ \hline
+    2  & 2  & 150.00 & NULL       & Pending   \\ \hline
+    3  & 3  & 300.75 & 2024-11-26 & Completed \\ \hline
+    4  & 4  & 120.00 & 2024-11-27 & Completed \\ \hline
+    5  & 5  & 450.25 & NULL       & Pending   \\ \hline
+    6  & 6  & 850.00 & 2024-11-29 & Completed \\ \hline
+    7  & 7  & 620.50 & 2024-11-30 & Completed \\ \hline
+    8  & 8  & 500.00 & NULL       & Pending   \\ \hline
+    9  & 9  & 700.00 & 2024-11-25 & Completed \\ \hline
+    10 & 10 & 320.75 & NULL       & Pending   \\ \hline
+\end{tabular}
+\end{table}
+
+\section{Queries}
+
+\subsection{Basic Queries}
+    \textbf{1. Retrieve names of airlines and their countries, where country is either USA or India, and the airline name contains “Airways”:}
+    \begin{lstlisting}[language=SQL]
+    SELECT Name, Country
+    FROM airlines
+    WHERE Country IN ('USA', 'India')
+    AND Name LIKE '%Airways%';
+    \end{lstlisting}
+    
+    \textbf{Output:}
+    \begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Name}             & \textbf{Country} \\ \hline
+Airways International      & USA              \\ \hline
+\end{tabular}
+\end{table}
+
+    \textbf{2. Retrieve all flights between two cities:}
+    \begin{lstlisting}[language=SQL]
+    SELECT * FROM Flights
+    WHERE DepartureCity = 'New York' AND ArrivalCity = 'London';
+    \end{lstlisting}
+    
+    \textbf{Output:}
+    \begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|l|l|l|}
+    \hline
+    \textbf{FlightID} & \textbf{AirlineID} & \textbf{DepartureCity} & \textbf{ArrivalCity} & \textbf{Duration} \\ \hline
+    1  & 1  & New York  & London     & 07:30:00 \\ \hline
+\end{tabular}
+\end{table}
+
+    \textbf{3. Show all confirmed bookings:}
+    \begin{lstlisting}[language=SQL]
+    SELECT * FROM Bookings WHERE Status = 'Confirmed';
+    \end{lstlisting}
+    
+    \textbf{Output:}
+    \begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|l|l|l|}
+    \hline
+    \textbf{BookingID} & \textbf{PassengerID} & \textbf{ScheduleID} & \textbf{BookingDate} & \textbf{Status} \\ \hline
+    1  & 1  & 1 & 2024-11-25 & Confirmed \\ \hline
+    3  & 3  & 3 & 2024-11-26 & Confirmed \\ \hline
+    4  & 4  & 4 & 2024-11-27 & Confirmed \\ \hline
+    6  & 6  & 6 & 2024-11-29 & Confirmed \\ \hline
+    7  & 7  & 7 & 2024-11-30 & Confirmed \\ \hline
+    9  & 9  & 1 & 2024-11-24 & Confirmed \\ \hline
+\end{tabular}
+\end{table}
+
+    \textbf{4. List all passengers for a specific flight:}
+    \begin{lstlisting}[language=SQL]
+    SELECT Passengers.FullName, Passengers.PassportNumber
+    FROM Passengers
+    JOIN Bookings ON Passengers.PassengerID = Bookings.PassengerID
+    JOIN Schedules ON Bookings.ScheduleID = Schedules.ScheduleID
+    WHERE Schedules.FlightID = 1;
+    \end{lstlisting}
+    
+    \textbf{Output:}
+    \begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|}
+    \hline
+    \textbf{FullName} & \textbf{PassportNumber} \\ \hline
+    John Doe          & A12345678 \\ \hline
+    George Martin     & I99887766 \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{Statistical Queries}
+    \textbf{1. Get average payment amount for bookings where payment status is “Completed” and payment amount greater than \$500:}
+    \begin{lstlisting}[language=SQL]
+    SELECT AVG(Amount) AS AveragePayment
+    FROM payments
+    WHERE PaymentStatus = 'Completed'
+    AND Amount>500;
+    \end{lstlisting}
+    
+    \textbf{Output:}
+    \begin{table}[h!]
+\centering
+\begin{tabular}{|l|}
+\hline
+\textbf{AveragePayment} \\ \hline
+717.750000             \\ \hline
+\end{tabular}
+\end{table}
+
+    \textbf{2. Count total bookings per flight:}
+    \begin{lstlisting}[language=SQL]
+    SELECT Flights.FlightID, COUNT(Bookings.BookingID) AS TotalBookings
+    FROM Flights
+    JOIN Schedules ON Flights.FlightID = Schedules.FlightID
+    JOIN Bookings ON Schedules.ScheduleID = Bookings.ScheduleID
+    GROUP BY Flights.FlightID;
+    \end{lstlisting}
+    
+    \textbf{Output:}
+    \begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|}
+    \hline
+    \textbf{FlightID} & \textbf{TotalBookings} \\ \hline
+    1  & 2 \\ \hline
+    2  & 1 \\ \hline
+    3  & 2 \\ \hline
+    4  & 1 \\ \hline
+    5  & 1 \\ \hline
+    6  & 1 \\ \hline
+    7  & 1 \\ \hline
+    8  & 1 \\ \hline
+\end{tabular}
+\end{table}
+
+    \textbf{3. Find the average payment amount:}
+    \begin{lstlisting}[language=SQL]
+    SELECT AVG(Amount) AS AvgPayment FROM Payments;
+    \end{lstlisting}
+    
+    \textbf{Output:}
+    \begin{table}[h!]
+\centering
+\begin{tabular}{|l|}
+    \hline
+    \textbf{AvgPayment} \\ \hline
+    471.275000 \\ \hline
+\end{tabular}
+\end{table}
+
+    \textbf{4. List the top 5 most booked flights:}
+    \begin{lstlisting}[language=SQL]
+    SELECT Flights.FlightID, COUNT(Bookings.BookingID) AS Bookings
+    FROM Flights
+    JOIN Schedules ON Flights.FlightID = Schedules.FlightID
+    JOIN Bookings ON Schedules.ScheduleID = Bookings.ScheduleID
+    GROUP BY Flights.FlightID
+    ORDER BY Bookings DESC
+    LIMIT 5;
+    \end{lstlisting}
+    
+    \textbf{Output:}
+    \begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|}
+    \hline
+    \textbf{FlightID} & \textbf{Bookings} \\ \hline
+    1  & 2 \\ \hline
+    3  & 2 \\ \hline
+    2  & 1 \\ \hline
+    4  & 1 \\ \hline
+    5  & 1 \\ \hline
+\end{tabular}
+\end{table}
+
+\section{Conclusion}
+
+\begin{enumerate}
+    \item This project demonstrates the design and implementation of a relational database system for a Flight Booking Management System.
+    \item It includes all essential components, from database design to data manipulation and advanced queries.
+    \item The system efficiently manages data for flights, passengers, bookings, and payments.
+\end{enumerate}
+
+\end{document}
