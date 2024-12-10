@@ -29,7 +29,7 @@
        \large CMPE343 DBMS--I: Term Project}
 
 \author{
-    K -- Omar
+    K -- A
 }
 
 \date{\today}
@@ -82,7 +82,7 @@ The \textbf{Flight Booking Management System} is designed to manage flight sched
 \begin{center}
 \begin{tikzpicture}
     \node[draw=none, rounded corners=10pt, inner sep=0pt] (image) 
-    {\includegraphics[width=1\textwidth]{erd.jpg}};
+    {\includegraphics[width=1\textwidth]{er_diagram.png}};
 \end{tikzpicture}
 \end{center}
 
@@ -721,6 +721,31 @@ LIMIT 3;
 American Airlines        & 1                     \\ \hline
 British Airways          & 1                     \\ \hline
 Qantas Airways           & 1                     \\ \hline
+\end{tabular}
+\end{table}
+
+    \textbf{16. Find the total number of bookings made on each day:}
+    \begin{lstlisting}[language=SQL, upquote=true]
+SELECT BookingDate, COUNT(BookingID) AS TotalBookings
+FROM Bookings
+GROUP BY BookingDate
+ORDER BY BookingDate;
+    \end{lstlisting}
+    
+    \textbf{16. Output:}
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{BookingDate} & \textbf{TotalBookings} \\ \hline
+2024-12-01           & 1                      \\ \hline
+2024-12-02           & 1                      \\ \hline
+2024-12-03           & 1                      \\ \hline
+2024-12-04           & 1                      \\ \hline
+2024-12-05           & 1                      \\ \hline
+2024-12-06           & 1                      \\ \hline
+2024-12-07           & 1                      \\ \hline
+2024-12-08           & 1                      \\ \hline
 \end{tabular}
 \end{table}
 
